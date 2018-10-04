@@ -1,0 +1,6 @@
+Monitoring-Icinga2-Client-Simple*
+*.tar.gz
+*.tar.bz2
+.build
+*.sw[pqr]
+
