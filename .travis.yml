@@ -14,4 +14,4 @@ language: perl
 perl:
   - '5.24'
 script:
-  - dzil smoke --release --author
+  - dzil smoke
