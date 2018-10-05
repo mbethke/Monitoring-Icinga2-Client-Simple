@@ -62,14 +62,14 @@ req_fail(
 
 req_ok(
     'schedule_downtime',
-    [ host => 'localhost', @start_end, comment => 'no comment', author => 'admin', ], 
+    [ host => 'localhost', @start_end, comment => 'no comment', author => 'admin', ],
     [ $uri_scheddt => $req_dthost ],
     "schedule_downtime"
 );
 
 req_ok(
     'schedule_downtime',
-    [ host => 'localhost', @start_end, comment => 'no comment', author => 'admin', services => 1 ], 
+    [ host => 'localhost', @start_end, comment => 'no comment', author => 'admin', services => 1 ],
     [
         $uri_scheddt => $req_dthost,
         $uri_scheddt => $req_dtservs,
@@ -79,14 +79,14 @@ req_ok(
 
 req_ok(
     'schedule_downtime',
-    [ host => 'localhost', @start_end, comment => 'no comment', author => 'admin', service => 'myservice' ], 
+    [ host => 'localhost', @start_end, comment => 'no comment', author => 'admin', service => 'myservice' ],
     [ $uri_scheddt => $req_dtserv ],
     "schedule_downtime w/single service"
 );
 
 req_ok(
     'schedule_downtime',
-    [ host => 'localhost', @start_end, comment => 'no comment', author => 'admin', service => 'myservice', services => 1 ], 
+    [ host => 'localhost', @start_end, comment => 'no comment', author => 'admin', service => 'myservice', services => 1 ],
     [
         $uri_scheddt => $req_dthost,
         $uri_scheddt => $req_dtservs,
@@ -96,14 +96,14 @@ req_ok(
 
 req_ok(
     'schedule_downtime',
-    [ host => 'localhost', @start_end, comment => 'no comment' ], 
+    [ host => 'localhost', @start_end, comment => 'no comment' ],
     [ $uri_scheddt => $req_dthostu ],
     "schedule_downtime w/o explicit author"
 );
 
 req_ok(
     'remove_downtime',
-    [ host => 'localhost', service => 'myservice' ], 
+    [ host => 'localhost', service => 'myservice' ],
     [
         $uri_removedt => '{' . $fil_hostsrv . ',"joins":["host.name"],"type":"Service"}'
     ],
@@ -112,7 +112,7 @@ req_ok(
 
 req_ok(
     'remove_downtime',
-    [ host => 'localhost' ], 
+    [ host => 'localhost' ],
     [
         $uri_removedt => '{' . $fil_host . ',"joins":["host.name"],"type":"Host"}'
     ],
@@ -121,7 +121,7 @@ req_ok(
 
 req_ok(
     'remove_downtime',
-    [ name => 'foobar' ], 
+    [ name => 'foobar' ],
     [
         "$uri_removedt\\?downtime=foobar" => '{"type":"Downtime"}'
     ],
@@ -130,7 +130,7 @@ req_ok(
 
 req_ok(
     'send_custom_notification',
-    [ comment => 'mycomment', author => 'admin', host => 'localhost' ], 
+    [ comment => 'mycomment', author => 'admin', host => 'localhost' ],
     [
         $uri_custnot => '{"author":"admin","comment":"mycomment","filter":"host.name==\"localhost\"","type":"Host"}'
     ],
@@ -139,7 +139,7 @@ req_ok(
 
 req_ok(
     'send_custom_notification',
-    [ comment => 'mycomment', author => 'admin', service => 'myservice' ], 
+    [ comment => 'mycomment', author => 'admin', service => 'myservice' ],
     [
         $uri_custnot => '{"author":"admin","comment":"mycomment","filter":"service.name==\"myservice\"","type":"Service"}'
     ],
@@ -148,7 +148,7 @@ req_ok(
 
 req_ok(
     'send_custom_notification',
-    [ comment => 'mycomment', service => 'myservice' ], 
+    [ comment => 'mycomment', service => 'myservice' ],
     [
         $uri_custnot => sprintf(
             '{"author":"%s","comment":"mycomment","filter":"service.name==\"myservice\"","type":"Service"}',
@@ -160,7 +160,7 @@ req_ok(
 
 req_ok(
     'set_notifications',
-    [ state => 1, host => 'localhost' ], 
+    [ state => 1, host => 'localhost' ],
     [
         $uri_hosts => '{"attrs":{"enable_notifications":"1"},"filter":"host.name==\"localhost\""}'
     ],
@@ -169,7 +169,7 @@ req_ok(
 
 req_ok(
     'set_notifications',
-    [ state => 0, host => 'localhost', service => 'myservice' ], 
+    [ state => 0, host => 'localhost', service => 'myservice' ],
     [
         $uri_services => '{"attrs":{"enable_notifications":""},'. $fil_hostsrv .'}'
     ],
@@ -178,21 +178,21 @@ req_ok(
 
 req_fail(
     'set_notifications',
-    [ state => 1, service => 'myservice' ], 
+    [ state => 1, service => 'myservice' ],
     qr/`host' argument missing/,
     "catches missing host argument"
 );
 
 req_fail(
     'set_notifications',
-    [ ], 
+    [ ],
     qr/^missing or undefined argument `state'/,
     "catches missing state"
 );
 
 req_ok(
     'query_app_attrs',
-    [ ], 
+    [ ],
     [
         $uri_status => ''
     ],
@@ -201,7 +201,7 @@ req_ok(
 
 req_ok(
     'set_app_attrs',
-    [ flapping => 1, notifications => 0, perfdata => 1 ], 
+    [ flapping => 1, notifications => 0, perfdata => 1 ],
     [
         $uri_app => '{"attrs":{"enable_flapping":"1","enable_notifications":"","enable_perfdata":"1"}}'
     ],
@@ -224,7 +224,7 @@ req_fail(
 
 req_ok(
     'set_global_notifications',
-    [ 1 ], 
+    [ 1 ],
     [
         $uri_app => '{"attrs":{"enable_notifications":"1"}}'
     ],
@@ -233,7 +233,7 @@ req_ok(
 
 req_ok(
     'query_host',
-    [ host => 'localhost' ], 
+    [ host => 'localhost' ],
     [
         $uri_hosts => '{"filter":"host.name==\"localhost\""}'
     ],
@@ -242,7 +242,7 @@ req_ok(
 
 req_ok(
     'query_child_hosts',
-    [ host => 'localhost' ], 
+    [ host => 'localhost' ],
     [
         $uri_hosts => '{"filter":"\"localhost\" in host.vars.parents"}'
     ],
@@ -251,7 +251,7 @@ req_ok(
 
 req_ok(
     'query_services',
-    [ service => 'myservice' ], 
+    [ service => 'myservice' ],
     [
         $uri_services => '{"filter":"service.name==\"myservice\""}'
     ],
@@ -293,7 +293,7 @@ sub _checkreq {
     my ($c, $req_contents, $desc) = @_;
 
     my $calls = $c->{ua}->calls;
-    
+
     my $i = 1;
     for my $req ( grep { $_->{method} eq 'FakeUA::request' } @$calls ) {
         my ($uri, $content) = splice @$req_contents, 0, 2;
@@ -346,7 +346,7 @@ sub request {
     if( $req->uri =~ m!/status/IcingaApplication$! ) {
         $content = '{"results":[{"status":{"icingaapplication":{"app":[]}}}]}'
     }
-    
+
     return HTTP::Response->new( 200, 'OK', undef, $content );
 }
 

@@ -270,6 +270,31 @@ sub _debug_dump {
 1;
 __END__
 
+=head1 SYNOPSIS
+
+    use Monitoring::Icinga2::Client::Simple;
+    use Data::Dumper;
+
+    # Instantiate an Icinga2 API client
+    my $ia = Monitoring::Icinga2::Client::Simple->new( server => 'monitoring.mycompany.org' );
+
+    # Disable notifications application-wide
+    $ia->set_global_notifications( 0 );
+
+    # Schedule an hour of downtime for web-1 and all of its services
+    $ia->schedule_downtime(
+        host => 'web-1',
+        services => 1;
+        start_time => scalar(time),
+        end_time => time + 3600,
+        fixed => 1,
+        comment => 'System maintenance',
+    );
+
+    # Print a summary of everything Icinga knows about web-1
+    print Dumper( $ia->query_host( host => 'web-1' ) );
+
+
 =head1 DESCRIPTION
 
 This module subclasses L<Monitoring::Icinga2::Client::REST> to present a
@@ -278,8 +303,7 @@ higher-level interface for commonly used operations such as:
 =for :list
 * Scheduling and removing downtimes on hosts and services
 * Enabling and disabling notifications for individual objects
-* Setting and getting global flags like those found under "Monitoring
-Health" -- notifications, active checks etc.
+* Setting and getting global flags like those found under "Monitoring Health" -- notifications, active checks etc.
 * Finding child objects
 
 L<Monitoring::Icinga2::Client::REST> can do all of this and more, but it
@@ -290,19 +314,15 @@ still allowing to make more specialized API calls yourself.
 =method new
 
     $ia = Monitoring::Icinga2::Client::Simple->new( agent => $ua );
-
-    $ia = Monitoring::Icinga2::Client::Simple->new(
-        hostname => 'monitoring.mycompany.org',
-        path => 'icinga2',
-    );
+    $ia = Monitoring::Icinga2::Client::Simple->new( hostname => 'monitoring.mycompany.org' );
 
 The constructor supports almost the same arguments as the one in
 L<Monitoring::Icinga2::Client::REST>. The differences are:
 
 =for :list
 * Only the extensible hash style arguments are supported
-* The C<$hostname> parameter is not a positional one but passed hash-style, too, under the key C<hostname>.
-* An additional key C<useragent> allows to in your own L<LWP::UserAgent> object; this enables more complicated configurations like using TLS client certificates that would otherwise make the number of arguments explode.
+* The C<$hostname> parameter is not a positional one but passed hash-style, too, under the key C<server>.
+* An additional key C<useragent> allows to pass in your own L<LWP::UserAgent> object; this enables more complicated configurations like using TLS client certificates that would otherwise make the number of arguments explode.
 
 Note that the C<useragent> injection is a bit of a hack as it meddles with the
 superclass' internals. I originally wrote quite some code (including the
@@ -349,7 +369,7 @@ successfully set. The following keys are available:
 
     $ia->remove_downtime( name => "web-1!NTP!49747048-f8d9-4ecc-95a4-86aa4c1011a9" );
     $ia->remove_downtime( host => "web-1", service => 'NTP' );
-    $ia->remove_downtime( host => "web-1" services => 1 );
+    $ia->remove_downtime( host => "web-1", services => 1 );
 
 Remove a downtime by name or host/service name
 
@@ -377,7 +397,7 @@ argument to also delete all of this host's service downtimes.
 
 Query all information Icinga2 has on a certain host. The result is a hashref,
 currently containing a single key C<attrs>. If the host is not found, C<undef>
-is eturned.
+is returned.
 
 The only mandatory argument is C<host>.
 
@@ -443,8 +463,8 @@ Icinga versions may return others:
 * C<enable_perfdata>: boolean
 * C<enable_service_checks>: boolean
 * C<node_name>: string
-* C<pid> integer
-* C<program_start> floatingpoint timestamp
+* C<pid>: integer
+* C<program_start>: floatingpoint timestamp
 * C<version>: string
 
 
