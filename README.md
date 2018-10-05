@@ -88,7 +88,7 @@ Optional arguments:
 
 - `service`: set a downtime for only this service on `host`. Ignored when combined with `services`.
 - `services`: set to a true value to set downtimes on all of a host's services. Default is to set the downime on the host only.
-- `author`: will use [getlogin](https://metacpan.org/pod/getlogin) if unset
+- `author`: will use [getlogin()](https://metacpan.org/pod/perlfunc#getlogin) (or [getpwuid](https://metacpan.org/pod/perlfunc#getpwuid) where that's unavailable) if unset
 - `fixed`: set to true for a fixed downtime, default is flexible
 
 The method returns a list of hashes with one element for each downtime
