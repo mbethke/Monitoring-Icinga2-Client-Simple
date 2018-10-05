@@ -7,7 +7,6 @@ before_install:
   - sudo apt-get update
   - sudo apt-get install libdist-zilla-perl
 install:
-  - cpanm  --quiet  --notest --skip-installed Dist::Zilla
   - dzil authordeps | grep -ve '^\W' | xargs -n 5 -P 10 cpanm  --quiet   --notest  --skip-installed
   - dzil listdeps | grep -ve '^\W' | cpanm  --quiet   --notest  --skip-installed
 language: perl
