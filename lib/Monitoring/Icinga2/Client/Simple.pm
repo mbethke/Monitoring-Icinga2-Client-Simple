@@ -24,6 +24,9 @@ sub new {
         defined $self->{ua} or croak( 'Monitoring::Icinga2::Client::REST seems to have changed internals; '. 'passing `useragent\' does not work. Please notify mbethke@cpan.org');
         $ua->default_header( 'Accept' => 'application/json' );
         $self->{ua} = $ua;
+        # uncoverable condition false
+        # uncoverable branch right
+        $self->{_mics_author} = getlogin || getpwuid($<);
     }
     return $self;
 }
@@ -32,7 +35,7 @@ sub schedule_downtime {
     my ($self, %args) = @_;
     _checkargs(\%args, qw/ start_time end_time comment host /);
     # uncoverable condition true
-    $args{author} //= getlogin;
+    $args{author} //= $self->{_mics_author};
 
     if( $args{service} and not $args{services} ) {
         return [ $self->_schedule_downtime_type( 'Service', \%args) ];
@@ -109,7 +112,8 @@ sub send_custom_notification {
             filter => "$obj_type.name==\"$args{$obj_type}\"",
             comment => $args{comment},
             # uncoverable condition false
-            author => $args{author} // getlogin,
+            # uncoverable branch right
+            author => $args{author} // $self->{_mics_author},
         }
     );
 }
@@ -353,7 +357,7 @@ Optional arguments:
 =for :list
 * C<service>: set a downtime for only this service on C<host>. Ignored when combined with C<services>.
 * C<services>: set to a true value to set downtimes on all of a host's services. Default is to set the downime on the host only.
-* C<author>: will use L<getlogin> if unset
+* C<author>: will use L<getlogin()|perlfunc/getlogin> (or L<getpwuid|perlfunc/getpwuid> where that's unavailable) if unset
 * C<fixed>: set to true for a fixed downtime, default is flexible
 
 The method returns a list of hashes with one element for each downtime

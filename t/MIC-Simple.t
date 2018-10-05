@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use v5.10.1;
 use utf8;
 use open qw/ :encoding(UTF-8) :std /;
 use Test::More;
@@ -8,7 +9,8 @@ use Test::Fatal;
 use JSON::XS;
 use Monitoring::Icinga2::Client::Simple;
 
-my @start_end = (
+my $LOGIN = getlogin || getpwuid($<);
+my @START_END = (
     start_time => 1_234_567_890,
     end_time   => 1_234_567_890 + 60,
 );
@@ -31,7 +33,7 @@ my $req_frag2 = $req_frag1 . '","fixed":null,"joins":["host.name"],"start_time":
 my $req_dthost   = $req_frag2 . '"Host"}';
 my $req_dtservs  = $req_frag2 . '"Service"}';
 my $req_dtserv   = $req_frag1 . ' && service.name==\"myservice\"","fixed":null,"joins":["host.name"],"start_time":1234567890,"type":"Service"}';
-(my $req_dthostu = $req_dthost) =~ s/admin/getlogin()/e;
+(my $req_dthostu = $req_dthost) =~ s/admin/$LOGIN/;
 
 isa_ok( newob(), 'Monitoring::Icinga2::Client::Simple', "new" );
 
@@ -62,14 +64,14 @@ req_fail(
 
 req_ok(
     'schedule_downtime',
-    [ host => 'localhost', @start_end, comment => 'no comment', author => 'admin', ],
+    [ host => 'localhost', @START_END, comment => 'no comment', author => 'admin', ],
     [ $uri_scheddt => $req_dthost ],
     "schedule_downtime"
 );
 
 req_ok(
     'schedule_downtime',
-    [ host => 'localhost', @start_end, comment => 'no comment', author => 'admin', services => 1 ],
+    [ host => 'localhost', @START_END, comment => 'no comment', author => 'admin', services => 1 ],
     [
         $uri_scheddt => $req_dthost,
         $uri_scheddt => $req_dtservs,
@@ -79,14 +81,14 @@ req_ok(
 
 req_ok(
     'schedule_downtime',
-    [ host => 'localhost', @start_end, comment => 'no comment', author => 'admin', service => 'myservice' ],
+    [ host => 'localhost', @START_END, comment => 'no comment', author => 'admin', service => 'myservice' ],
     [ $uri_scheddt => $req_dtserv ],
     "schedule_downtime w/single service"
 );
 
 req_ok(
     'schedule_downtime',
-    [ host => 'localhost', @start_end, comment => 'no comment', author => 'admin', service => 'myservice', services => 1 ],
+    [ host => 'localhost', @START_END, comment => 'no comment', author => 'admin', service => 'myservice', services => 1 ],
     [
         $uri_scheddt => $req_dthost,
         $uri_scheddt => $req_dtservs,
@@ -96,7 +98,7 @@ req_ok(
 
 req_ok(
     'schedule_downtime',
-    [ host => 'localhost', @start_end, comment => 'no comment' ],
+    [ host => 'localhost', @START_END, comment => 'no comment' ],
     [ $uri_scheddt => $req_dthostu ],
     "schedule_downtime w/o explicit author"
 );
@@ -150,10 +152,7 @@ req_ok(
     'send_custom_notification',
     [ comment => 'mycomment', service => 'myservice' ],
     [
-        $uri_custnot => sprintf(
-            '{"author":"%s","comment":"mycomment","filter":"service.name==\"myservice\"","type":"Service"}',
-            getlogin
-        )
+        $uri_custnot => '{"author":"' . $LOGIN . '","comment":"mycomment","filter":"service.name==\"myservice\"","type":"Service"}',
     ],
     "send custom notification w/o explicit author"
 );
