@@ -6,7 +6,7 @@ Monitoring::Icinga2::Client::Simple
 
 # VERSION
 
-version 0.001000\_07
+version 0.001000\_08
 
 # SYNOPSIS
 
