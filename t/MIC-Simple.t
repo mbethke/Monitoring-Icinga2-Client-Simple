@@ -17,8 +17,8 @@ my $uri_base     = 'https://localhost:5665/v1';
 my $uri_scheddt  = "$uri_base/actions/schedule-downtime";
 my $uri_removedt = "$uri_base/actions/remove-downtime";
 my $uri_custnot  = "$uri_base/actions/send-custom-notification";
-my $uri_hosts    = "$uri_base/objects/hosts/";
-my $uri_services = "$uri_base/objects/services/";
+my $uri_hosts    = "$uri_base/objects/hosts";
+my $uri_services = "$uri_base/objects/services";
 my $uri_app      = "$uri_base/objects/icingaapplications/app";
 my $uri_status   = "$uri_base/status/IcingaApplication";
 
@@ -32,6 +32,8 @@ my $req_dthost   = $req_frag2 . '"Host"}';
 my $req_dtservs  = $req_frag2 . '"Service"}';
 my $req_dtserv   = $req_frag1 . ' && service.name==\"myservice\"","fixed":null,"joins":["host.name"],"start_time":1234567890,"type":"Service"}';
 (my $req_dthostu = $req_dthost) =~ s/admin/getlogin()/e;
+
+isa_ok( newob(), 'Monitoring::Icinga2::Client::Simple', "new" );
 
 like(
     exception { Monitoring::Icinga2::Client::Simple->new(1) },
@@ -89,7 +91,7 @@ req_ok(
         $uri_scheddt => $req_dthost,
         $uri_scheddt => $req_dtservs,
     ],
-    "schedule_downtime w/both service and services specified "
+    "schedule_downtime w/both service and services specified"
 );
 
 req_ok(
@@ -157,8 +159,8 @@ req_ok(
 );
 
 req_ok(
-    'notifications',
-    [ 1, host => 'localhost' ], 
+    'set_notifications',
+    [ state => 1, host => 'localhost' ], 
     [
         $uri_hosts => '{"attrs":{"enable_notifications":"1"},"filter":"host.name==\"localhost\""}'
     ],
@@ -166,25 +168,25 @@ req_ok(
 );
 
 req_ok(
-    'notifications',
-    [ 1, host => 'localhost', service => 'myservice' ], 
+    'set_notifications',
+    [ state => 0, host => 'localhost', service => 'myservice' ], 
     [
-        $uri_services => '{"attrs":{"enable_notifications":"1"},'. $fil_hostsrv .'}'
+        $uri_services => '{"attrs":{"enable_notifications":""},'. $fil_hostsrv .'}'
     ],
     "enable notifications for service"
 );
 
 req_fail(
-    'notifications',
-    [ 1, service => 'myservice' ], 
+    'set_notifications',
+    [ state => 1, service => 'myservice' ], 
     qr/`host' argument missing/,
     "catches missing host argument"
 );
 
 req_fail(
-    'notifications',
+    'set_notifications',
     [ ], 
-    qr'\$state is required to be a boolean value',
+    qr/^missing or undefined argument `state'/,
     "catches missing state"
 );
 
@@ -209,7 +211,7 @@ req_ok(
 req_fail(
     'set_app_attrs',
     [ foo => 1 ],
-    qr/^Need at least one argument of/,
+    qr/^need at least one argument of/,
     "detects missing valid args"
 );
 
@@ -221,7 +223,7 @@ req_fail(
 );
 
 req_ok(
-    'global_notifications',
+    'set_global_notifications',
     [ 1 ], 
     [
         $uri_app => '{"attrs":{"enable_notifications":"1"}}'
@@ -229,8 +231,42 @@ req_ok(
     "enable global notifications"
 );
 
+req_ok(
+    'query_host',
+    [ host => 'localhost' ], 
+    [
+        $uri_hosts => '{"filter":"host.name==\"localhost\""}'
+    ],
+    "query host"
+);
+
+req_ok(
+    'query_child_hosts',
+    [ host => 'localhost' ], 
+    [
+        $uri_hosts => '{"filter":"\"localhost\" in host.vars.parents"}'
+    ],
+    "query child host"
+);
+
+req_ok(
+    'query_services',
+    [ service => 'myservice' ], 
+    [
+        $uri_services => '{"filter":"service.name==\"myservice\""}'
+    ],
+    "query services"
+);
+
 done_testing;
 
+# Check that a request succeeds and has both the right URI and the
+# correct postdata.
+# Args:
+# * method to call
+# * arguments as an arrayref
+# * expected requests as uri => postdata pairs in a an arrayref
+# * description of this test
 sub req_ok {
     my ($method, $margs, $req_cont, $desc) = @_;
     my $c = newob();
@@ -238,9 +274,11 @@ sub req_ok {
         exception { $c->$method( @$margs ) },
         undef,
         "$desc: arg check passes for $method",
-    ) and checkreq( $c, $req_cont, $desc );
+    ) and _checkreq( $c, $req_cont, $desc );
 }
 
+# Check that a request fails (i.e. dies) when it is supposed to,
+# e.g. to catch wrong or missing arguments
 sub req_fail {
     my ($method, $margs, $except_re, $desc) = @_;
     my $c = newob();
@@ -251,7 +289,7 @@ sub req_fail {
     );
 }
 
-sub checkreq {
+sub _checkreq {
     my ($c, $req_contents, $desc) = @_;
 
     my $calls = $c->{ua}->calls;
@@ -259,15 +297,15 @@ sub checkreq {
     my $i = 1;
     for my $req ( grep { $_->{method} eq 'FakeUA::request' } @$calls ) {
         my ($uri, $content) = splice @$req_contents, 0, 2;
-        # fix up uri to account for a concatenation bug that might be fixed
+        # Fix up URI to account for a concatenation bug that might get fixed
         $uri =~ s!/v1/!/v1//?!;
         like( $req->{args}[0]->uri, qr/^$uri$/, "$desc (uri $i)" );
-        is( _decenc( $req->{args}[0]->content ), $content, "$desc (req $i)" );
+        is( _canon_json( $req->{args}[0]->content ), $content, "$desc (req $i)" );
         $i++;
     }
 }
 
-
+# Construct a new object with the fake UserAgent that collects call stats
 sub newob {
     return Monitoring::Icinga2::Client::Simple->new(
         hostname => 'localhost',
@@ -275,7 +313,8 @@ sub newob {
     );
 }
 
-sub _decenc {
+# Canonicalize a JSON string by decoding and subsequent encoding
+sub _canon_json {
     my $s = shift;
     return $s unless defined $s and length $s;
     my $codec = JSON::XS->new->canonical;

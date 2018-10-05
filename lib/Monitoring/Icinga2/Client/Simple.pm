@@ -114,16 +114,16 @@ sub send_custom_notification {
     );
 }
 
-sub notifications {
-    my ($self, $state, %args) = @_;
-    defined $state or croak( '$state is required to be a boolean value' );
+sub set_notifications {
+    my ($self, %args) = @_;
+    _checkargs(\%args, qw/ state /);
     _checkargs_any(\%args, qw/ host service /);
     my $uri_object = $args{service} ? 'services' : 'hosts';
 
     return $self->_verbose_request('POST',
-        "/objects/$uri_object/",
+        "/objects/$uri_object",
         {
-            attrs => { enable_notifications => !!$state },
+            attrs => { enable_notifications => !!$args{state} },
             filter => _create_filter( \%args ),
         }
     );
@@ -174,9 +174,36 @@ sub query_app_attrs {
     }
 }
 
-sub global_notifications {
+sub set_global_notifications {
     my ($self, $state) = @_;
     $self->set_app_attrs( notifications => $state );
+}
+
+sub query_host {
+    my ($self, %args) = @_;
+    _checkargs(\%args, qw/ host /);
+    return $self->_verbose_request('GET',
+        '/objects/hosts',
+        { filter => "host.name==\"$args{host}\"" }
+    )->[0];
+}
+
+sub query_child_hosts {
+    my ($self, %args) = @_;
+    _checkargs(\%args, qw/ host /);
+    return $self->_verbose_request('GET',
+        '/objects/hosts',
+        { filter => "\"$args{host}\" in host.vars.parents" }
+    );
+}
+
+sub query_services {
+    my ($self, %args) = @_;
+    _checkargs(\%args, qw/ service /);
+    return $self->_verbose_request('GET',
+        '/objects/services',
+        { filter => "service.name==\"$args{service}\"" }
+    );
 }
 
 sub _verbose_request {
@@ -202,7 +229,7 @@ sub _checkargs {
     my $args = shift;
 
     all { defined $args->{$_} } @_ or croak(
-        sprintf "Missing or undefined argument `%s' to %s()",
+        sprintf "missing or undefined argument `%s' to %s()",
         ( first { not defined $args->{$_} } @_ ),
         (caller(1))[3]
     );
@@ -214,7 +241,7 @@ sub _checkargs_any {
    my $args = shift;
 
    any { defined $args->{$_} } grep { exists $args->{$_} } @_ or croak(
-       sprintf "Need at least one argument of: %s to %s()",
+       sprintf "need at least one argument of: %s to %s()",
        join(',', @_), (caller(1))[3]
    );
 }
@@ -343,30 +370,39 @@ objects are deleted. Set C<services> to a true value and pass a C<host>
 argument to also delete all of this host's service downtimes.
 
 
-=method query_child_hosts
+=method query_host
 
-    $results = $ia->query_child_hosts( host => 'hypervisor-1' );
-    say "$_->{name}: $_->{type}" for @$results;
+    $result = $ia->query_host( host => 'web-1' );
+    say "$result->{attrs}{name}: $result->{attrs}{type}";
 
-Query all host objects that have a certain host listed as a parent. The result
-is a reference to a list of rather large hashes containing all the object
-attributes, of which C<name> will probably be most relevant.
+Query all information Icinga2 has on a certain host. The result is a hashref,
+currently containing a single key C<attrs>. If the host is not found, C<undef>
+is eturned.
 
 The only mandatory argument is C<host>.
 
-=cut
+=method query_child_hosts
 
-sub query_child_hosts {
-    my ($self, %args) = @_;
-    _checkargs(\%args, qw/ host /);
+    $results = $ia->query_child_hosts( host => 'hypervisor-1' );
+    say "$_->{attrs}{name}: $_->{attrs}{type}" for @$results;
 
-    return $self->_verbose_request('GET',
-        '/objects/hosts',
-        {
-            filter => "\"$args{host}\" in host.vars.parents",
-        }
-    );
-}
+Query all host objects that have a certain host listed as a parent. The result
+is a reference to a list of hashes like those returned by L</query_host>.
+
+The only mandatory argument is C<host>.
+
+=method query_services
+
+    $result = $ia->query_services( service => 'HTTP' );
+    say "$_->{attrs}{name}: $_->{attrs}{type}" for @$results;
+
+Query all information Icinga2 has on a certain service. As services usually
+have more than one instance, the result is a reference to a list of hashes,
+each describing one instance.
+
+The only mandatory argument is C<service>. Note that this is a singular as it
+specifies a single service name while the method name is plural due to the
+plurality of returned results.
 
 =method send_custom_notification
 
@@ -379,14 +415,15 @@ additionally one of C<host> and C<service> must be set.
 Note that for this call C<host> and C<service> are mutually exclusive. If both
 are present, C<host> wins.
 
-=method notifications
+=method set_notifications
 
-    $ia->notifications( 0, host => 'web-1' );
+    $ia->set_notifications( state => 0, host => 'web-1' );
 
-Enable or disable notifications for a host or service. C<$state> is a boolean
-that gives the desired state; C<host> or C<service> specifiy the object.
+Enable or disable notifications for a host or service. C<state> is a boolean
+specifying whether to switch notifications on or off; C<host> or C<service>
+specifiy the object.
 
-Use L</global_notifications> to toggle notifications application-wide.
+Use L</set_global_notifications> to toggle notifications application-wide!
 
 
 =method query_app_attrs
@@ -419,9 +456,9 @@ Set application attributes passed as hash-style arguments. Of the ones returned
 by L</query_app_attrs>, only the booleans are settable; their names don't
 include the `C<enable_>' prefix.
 
-=method global_notifications
+=method set_global_notifications
 
-    $ia->global_notifications( 0 );
+    $ia->set_global_notifications( 0 );
 
 Convenience method to enable/disable global notifications, equivalent to
 C<set_app_attrs( notifications =E<gt> $state)>. The only mandatory argument is
