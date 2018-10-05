@@ -1,3 +1,5 @@
+# ABSTRACT: Simpler REST client for Icinga2
+
 package Monitoring::Icinga2::Client::Simple;
 
 use strict;
