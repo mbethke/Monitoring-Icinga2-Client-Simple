@@ -1,17 +1,10 @@
 ---
+language: perl
 before_install:
   - export HARNESS_OPTIONS=j10:c HARNESS_TIMER=1
   - rm .travis.yml
-  - git config --global user.name "Dist Zilla Plugin TravisCI"
+  - git config --global user.name "TravisCI"
   - git config --global user.email $HOSTNAME":not-for-mail@travis-ci.org"
   - sudo apt-get update
-  - sudo apt-get install libdist-zilla-perl
-  - cpanm Pod::Elemental::Transformer::List
-install:
-  - dzil authordeps | grep -ve '^\W' | xargs -n 5 -P 10 cpanm  --quiet   --notest  --skip-installed
-  - dzil listdeps | grep -ve '^\W' | cpanm  --quiet   --notest  --skip-installed
-language: perl
 perl:
   - '5.24'
-script:
-  - dzil smoke
