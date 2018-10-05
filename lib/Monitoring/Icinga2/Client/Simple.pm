@@ -5,7 +5,6 @@ use warnings;
 use 5.010_001;
 use Monitoring::Icinga2::Client::REST 2;
 use parent -norequire, 'Monitoring::Icinga2::Client::REST';
-use POSIX ();
 use Carp;
 use List::Util qw/ all any first /;
 use constant DEBUG => $ENV{DEBUG};
@@ -32,8 +31,8 @@ sub new {
 sub schedule_downtime {
     my ($self, %args) = @_;
     _checkargs(\%args, qw/ start_time end_time comment host /);
-    # uncoverable condition false
-    $args{author} //= POSIX::cuserid();
+    # uncoverable condition true
+    $args{author} //= getlogin;
 
     if( $args{service} and not $args{services} ) {
         return [ $self->_schedule_downtime_type( 'Service', \%args) ];
@@ -110,7 +109,7 @@ sub send_custom_notification {
             filter => "$obj_type.name==\"$args{$obj_type}\"",
             comment => $args{comment},
             # uncoverable condition false
-            author => $args{author} // POSIX::cuserid(),
+            author => $args{author} // getlogin,
         }
     );
 }
@@ -307,7 +306,7 @@ Optional arguments:
 =for :list
 * C<service>: set a downtime for only this service on C<host>. Ignored when combined with C<services>.
 * C<services>: set to a true value to set downtimes on all of a host's services. Default is to set the downime on the host only.
-* C<author>: will use L<POSIX/cuserid> if unset
+* C<author>: will use L<getlogin> if unset
 * C<fixed>: set to true for a fixed downtime, default is flexible
 
 The method returns a list of hashes with one element for each downtime

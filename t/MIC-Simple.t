@@ -31,7 +31,7 @@ my $req_frag2 = $req_frag1 . '","fixed":null,"joins":["host.name"],"start_time":
 my $req_dthost   = $req_frag2 . '"Host"}';
 my $req_dtservs  = $req_frag2 . '"Service"}';
 my $req_dtserv   = $req_frag1 . ' && service.name==\"myservice\"","fixed":null,"joins":["host.name"],"start_time":1234567890,"type":"Service"}';
-(my $req_dthostu = $req_dthost) =~ s/admin/POSIX::cuserid()/e;
+(my $req_dthostu = $req_dthost) =~ s/admin/getlogin()/e;
 
 like(
     exception { Monitoring::Icinga2::Client::Simple->new(1) },
@@ -54,7 +54,7 @@ is(
 req_fail(
     'schedule_downtime',
     [ host => 'localhost' ],
-    qr/^Missing or undefined argument `start_time'/,
+    qr/^missing or undefined argument `start_time'/,
     "detects missing args"
 );
 
@@ -150,7 +150,7 @@ req_ok(
     [
         $uri_custnot => sprintf(
             '{"author":"%s","comment":"mycomment","filter":"service.name==\"myservice\"","type":"Service"}',
-            POSIX::cuserid()
+            getlogin
         )
     ],
     "send custom notification w/o explicit author"
