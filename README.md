@@ -1,12 +1,12 @@
 # NAME
 
-Monitoring::Icinga2::Client::Simple
+Monitoring::Icinga2::Client::Simple - Simpler REST client for Icinga2
 
 [![Build Status](https://travis-ci.org/mbethke/Monitoring-Icinga2-Client-Simple.png?branch=master)](https://travis-ci.org/mbethke/Monitoring-Icinga2-Client-Simple)
 
 # VERSION
 
-version 0.001000\_08
+version 0.001000\_09
 
 # SYNOPSIS
 
