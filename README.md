@@ -2,7 +2,7 @@
 
 Monitoring::Icinga2::Client::Simple - Simpler REST client for Icinga2
 
-[![Build Status](https://travis-ci.org/mbethke/Monitoring-Icinga2-Client-Simple.png?branch=master)](https://travis-ci.org/mbethke/Monitoring-Icinga2-Client-Simple)
+[![Build Status](https://travis-ci.org/mbethke/Monitoring-Icinga2-Client-Simple.png?branch=build/master)](https://travis-ci.org/mbethke/Monitoring-Icinga2-Client-Simple)
 
 # VERSION
 
