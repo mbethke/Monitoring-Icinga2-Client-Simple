@@ -14,9 +14,9 @@ sub new {
     croak( "only hash-style args are supported" ) if @_ % 2;
     my %args = @_;
     # uncoverable condition false
-    my $hostname = delete $args{hostname} // croak( "`hostname' arg is required" );
+    my $server = delete $args{server} // croak( "`server' arg is required" );
     my $ua = delete $args{useragent};
-    my $self = $class->SUPER::new( $hostname, %args );
+    my $self = $class->SUPER::new( $server, %args );
     if( defined $ua ) {
         # This is a hack as I don't maintain the superclass. However, I wrote its
         # constructor and we'll check whether it has changed so it should be fine.

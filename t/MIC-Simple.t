@@ -43,12 +43,12 @@ like(
 
 like(
     exception { Monitoring::Icinga2::Client::Simple->new( foo => 1 ) },
-    qr/^`hostname' arg is required/,
-    'constructor catches missing hostname arg'
+    qr/^`server' arg is required/,
+    'constructor catches missing server arg'
 );
 
 is(
-    exception { Monitoring::Icinga2::Client::Simple->new( hostname => 'foo' ) },
+    exception { Monitoring::Icinga2::Client::Simple->new( server => 'foo' ) },
     undef,
     'hostname is the only mandatory argument'
 );
@@ -308,7 +308,7 @@ sub _checkreq {
 # Construct a new object with the fake UserAgent that collects call stats
 sub newob {
     return Monitoring::Icinga2::Client::Simple->new(
-        hostname => 'localhost',
+        server => 'localhost',
         useragent => FakeUA->new,
     );
 }
