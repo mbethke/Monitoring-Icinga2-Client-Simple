@@ -162,10 +162,10 @@ sub query_app_attrs {
     sub set_app_attrs {
         my ($self, %args) = @_;
         _checkargs_any(\%args, keys %legal_attrs);
-        my @unknown_attrs = grep { not exists $legal_attrs{$_} } sort keys %args;
+        my @unknown_attrs = grep { not exists $legal_attrs{$_} } keys %args;
         @unknown_attrs and croak(
             sprintf "Unknown attributes: %s; legal attributes are: %s",
-            join(",", @unknown_attrs),
+            join(",", sort @unknown_attrs),
             join(",", sort keys %legal_attrs),
         );
 
