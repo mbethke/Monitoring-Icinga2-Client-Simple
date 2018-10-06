@@ -51,7 +51,7 @@ sub schedule_downtime {
 
 sub _schedule_downtime_type {
     my ($self, $type, $args) = @_;
-    my $req_results = $self->_verbose_request('POST',
+    my $req_results = $self->_request('POST',
         '/actions/schedule-downtime',
         {
             type => $type,
@@ -93,7 +93,7 @@ sub _remove_downtime_type {
     } else {
         @post_args = ( $args, { type => $type } );
     }
-    my $req_results = $self->_verbose_request('POST',
+    my $req_results = $self->_request('POST',
         "/actions/remove-downtime",
         @post_args,
     );
@@ -107,7 +107,7 @@ sub send_custom_notification {
 
     my $obj_type = defined $args{host} ? 'host' : 'service';
 
-    return $self->_verbose_request('POST',
+    return $self->_request('POST',
         '/actions/send-custom-notification',
         {
             type => ucfirst $obj_type,
@@ -126,7 +126,7 @@ sub set_notifications {
     _checkargs_any(\%args, qw/ host service /);
     my $uri_object = $args{service} ? 'services' : 'hosts';
 
-    return $self->_verbose_request('POST',
+    return $self->_request('POST',
         "/objects/$uri_object",
         {
             attrs => { enable_notifications => !!$args{state} },
@@ -138,7 +138,7 @@ sub set_notifications {
 sub query_app_attrs {
     my ($self) = @_;
 
-    my $r = $self->_verbose_request('GET',
+    my $r = $self->_request('GET',
         "/status/IcingaApplication",
     );
     # uncoverable branch true
@@ -169,7 +169,7 @@ sub query_app_attrs {
             join(",", sort keys %legal_attrs),
         );
 
-        return $self->_verbose_request('POST',
+        return $self->_request('POST',
             '/objects/icingaapplications/app',
             {
                 attrs => {
@@ -188,7 +188,7 @@ sub set_global_notifications {
 sub query_host {
     my ($self, %args) = @_;
     _checkargs(\%args, qw/ host /);
-    return $self->_verbose_request('GET',
+    return $self->_request('GET',
         '/objects/hosts',
         { filter => "host.name==\"$args{host}\"" }
     )->[0];
@@ -197,7 +197,7 @@ sub query_host {
 sub query_child_hosts {
     my ($self, %args) = @_;
     _checkargs(\%args, qw/ host /);
-    return $self->_verbose_request('GET',
+    return $self->_request('GET',
         '/objects/hosts',
         { filter => "\"$args{host}\" in host.vars.parents" }
     );
@@ -206,13 +206,13 @@ sub query_child_hosts {
 sub query_services {
     my ($self, %args) = @_;
     _checkargs(\%args, qw/ service /);
-    return $self->_verbose_request('GET',
+    return $self->_request('GET',
         '/objects/services',
         { filter => "service.name==\"$args{service}\"" }
     );
 }
 
-sub _verbose_request {
+sub _request {
     my ($self, $method, $url, $getargs, $postdata) = @_;
 
     if(defined $getargs and ref $getargs) {
@@ -220,12 +220,9 @@ sub _verbose_request {
         $postdata = $getargs;
         undef $getargs;
     }
-    _debug("Query URL: $url", $getargs ? "Query args: $getargs" : ());
-    _debug_dump($postdata);
     # uncoverable branch true
     my $r = $self->do_request($method, $url, $getargs, $postdata)
         or die $self->request_status_line . "\n";
-    _debug_dump($r);
     return $r->{results};
 }
 
@@ -260,17 +257,6 @@ sub _create_filter {
     my $filter = "host.name==\"$args->{host}\"";
     $filter .= " && service.name==\"$args->{service}\"" if $args->{service};
     return $filter;
-}
-
-sub _debug {
-    print STDERR @_ if DEBUG;
-}
-
-sub _debug_dump {
-    if(DEBUG) {
-        require YAML::XS;
-        print YAML::XS::Dump(\@_);
-    }
 }
 
 1;
