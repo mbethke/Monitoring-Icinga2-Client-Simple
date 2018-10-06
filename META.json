@@ -60,7 +60,7 @@
          "web" : "https://github.com/mbethke/Monitoring-Icinga2-Client-Simple"
       }
    },
-   "version" : "v0.1.0",
+   "version" : "0.001000",
    "x_serialization_backend" : "Cpanel::JSON::XS version 4.06"
 }
 
