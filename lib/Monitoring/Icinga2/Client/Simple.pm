@@ -1,7 +1,7 @@
 # ABSTRACT: Simpler REST client for Icinga2
 
 package Monitoring::Icinga2::Client::Simple;
-$Monitoring::Icinga2::Client::Simple::VERSION = '0.001000';
+$Monitoring::Icinga2::Client::Simple::VERSION = 'v0.1.0';
 use strict;
 use warnings;
 use 5.010_001;
@@ -287,7 +287,7 @@ Monitoring::Icinga2::Client::Simple - Simpler REST client for Icinga2
 
 =head1 VERSION
 
-version 0.001000
+version v0.1.0
 
 =head1 SYNOPSIS
 
