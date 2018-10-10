@@ -195,8 +195,9 @@ sub query_hosts {
 }
 
 sub query_host {
-    my $self = shift;
-    return $self->query_hosts( @_ )->[0];
+    my ($self, %args) = @_;
+    _checkargs(\%args, qw/ host /);
+    return $self->query_hosts( hosts => $args{host} )->[0];
 }
 
 sub query_child_hosts {
