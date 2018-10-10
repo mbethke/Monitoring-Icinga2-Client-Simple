@@ -239,7 +239,10 @@ req_ok(
 req_ok(
     'query_parent_hosts',
     [ host => 'localhost', expand => 1 ],
-    [ $uri_hosts => '{"filter":"host.name==\"localhost\""}' ],
+    [
+        $uri_hosts => '{"filter":"host.name==\"localhost\""}',
+        $uri_hosts => '{"filter":"host.name in [\"parent1\",\"parent2\"]"}'
+    ],
     "query parent hosts with expansion"
 );
 
