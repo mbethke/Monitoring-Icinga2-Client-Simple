@@ -214,7 +214,7 @@ sub query_parent_hosts {
     my $expand = delete $args{expand};
     my $names = ( $self->query_host( %args ) // {} )->{attrs}{vars}{parents} // [];
     return $names unless $expand and @$names;
-    return $self->query_hosts( host => $names );
+    return $self->query_hosts( hosts => $names );
 }
 
 sub query_services {
