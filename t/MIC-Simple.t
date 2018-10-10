@@ -351,10 +351,10 @@ sub _incallers {
     my $re = shift;
     my $f=1;
     my $caller;
-    do {
-        $caller = (caller( $f++ ))[3];
+    while(1) {
+        $caller = (caller( $f++ ))[3] // return;
         return 1 if $caller =~ $re;
-    } while($caller);
+    };
     return;
 }
 
