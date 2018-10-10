@@ -190,7 +190,7 @@ sub query_hosts {
     _checkargs(\%args, qw/ hosts /);
     my $result = $self->_request('GET',
         '/objects/hosts',
-        { filter => _filter_expr( "host.name", $args{hosts} ) } },
+        { filter => _filter_expr( "host.name", $args{hosts} ) },
     );
 }
 
