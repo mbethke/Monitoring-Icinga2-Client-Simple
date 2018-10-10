@@ -231,6 +231,15 @@ req_ok(
 );
 
 req_ok(
+    'query_hosts',
+    [ hosts => [qw/ localhost otherhost /] ],
+    [
+        $uri_hosts => '{"filter":"host.name in [\"localhost\",\"otherhost\"]"}'
+    ],
+    "query host"
+);
+
+req_ok(
     'query_host',
     [ host => 'localhost' ],
     [
