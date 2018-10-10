@@ -185,13 +185,19 @@ sub set_global_notifications {
     $self->set_app_attrs( notifications => $state );
 }
 
+sub query_hosts {
+    my ($self, %args) = @_;
+    _checkargs(\%args, qw/ hosts /);
+    my $result = $self->_request('GET',
+        '/objects/hosts',
+        { filter => _filter_expr( "host.name", $args{hosts} ) },
+    );
+}
+
 sub query_host {
     my ($self, %args) = @_;
     _checkargs(\%args, qw/ host /);
-    return $self->_request('GET',
-        '/objects/hosts',
-        { filter => "host.name==\"$args{host}\"" }
-    )->[0];
+    return $self->query_hosts( hosts => $args{host} )->[0];
 }
 
 sub query_child_hosts {
@@ -203,12 +209,26 @@ sub query_child_hosts {
     );
 }
 
+sub query_parent_hosts {
+    my ($self, %args) = @_;
+    my $expand = delete $args{expand};
+    # uncoverable condition right
+    my $results = $self->query_host( %args ) // {};
+    # uncoverable condition right
+    my $names = $results->{attrs}{vars}{parents} // [];
+    undef $results;
+    # uncoverable condition right
+    return $names unless $expand and @$names;
+    return $self->query_hosts( hosts => $names );
+}
+
 sub query_services {
     my ($self, %args) = @_;
-    _checkargs(\%args, qw/ service /);
+    _checkargs_any(\%args, qw/ service services /);
+    my $srv = $args{service} // $args{services};
     return $self->_request('GET',
         '/objects/services',
-        { filter => "service.name==\"$args{service}\"" }
+        { filter => _filter_expr( "service.name", $srv ) },
     );
 }
 
@@ -253,10 +273,20 @@ sub _checkargs_any {
 # Not a method!
 sub _create_filter {
     my $args = shift;
-    croak( "`host' argument missing" ) unless defined $args->{host};
-    my $filter = "host.name==\"$args->{host}\"";
-    $filter .= " && service.name==\"$args->{service}\"" if $args->{service};
-    return $filter;
+    defined $args->{host} or croak(
+        sprintf( "missing or undefined argument `host' to %s()", (caller(1))[3] )
+    );
+    my $filter = _filter_expr( "host.name", $args->{host} );
+    return $filter unless $args->{service};
+    return "$filter && " . _filter_expr( "service.name", $args->{service} );
+}
+
+# Return an == or `in' expression depending on the type of argument.
+# Only scalars and arrayrefs make sense!
+sub _filter_expr {
+    my ($what, $arg) = @_;
+    return "$what==\"$arg\"" unless ref $arg;
+    return "$what in [" . join( ',', map { "\"$_\"" } @$arg ) . ']';
 }
 
 1;
@@ -387,11 +417,24 @@ argument to also delete all of this host's service downtimes.
     $result = $ia->query_host( host => 'web-1' );
     say "$result->{attrs}{name}: $result->{attrs}{type}";
 
-Query all information Icinga2 has on a certain host. The result is a hashref,
-currently containing a single key C<attrs>. If the host is not found, C<undef>
-is returned.
+Equivalent to L</query_hosts> except that it accepts only a single host name
+and the result is a reference to a single hash, or C<undef> if the host
+can't be found.
 
 The only mandatory argument is C<host>.
+
+=method query_hosts
+
+    $results = $ia->query_host( hosts => [ qw( web-1 hypervisor-1 ) ] );
+    say "$_->{attrs}{name}: $_->{attrs}{type}" for @$results;
+
+Query all information Icinga2 has on a number of hosts. The result is a
+reference to a list of hashes, each of which currently contains a single key
+C<attrs>.
+
+The only mandatory argument is C<hosts>, which may also specify a single
+scalar, so this method is preferable for consistency over L</query_host>.
+
 
 =method query_child_hosts
 
@@ -403,18 +446,29 @@ is a reference to a list of hashes like those returned by L</query_host>.
 
 The only mandatory argument is C<host>.
 
+=method query_parent_hosts
+
+    $results = $ia->query_parent_hosts( host => 'web-1', expand => 1 );
+    say for @$results;
+
+Query all parent host names of a given host. If C<expand> is C<false> or
+missing, the result is a reference to a list of names. Otherwise it is a
+reference to a list of hashes like those returned by L</query_host>.
+
+The only mandatory argument is C<host>.
+
+
 =method query_services
 
     $result = $ia->query_services( service => 'HTTP' );
+    $result = $ia->query_services( services => [ qw( HTTP SMTP ) ] );
     say "$_->{attrs}{name}: $_->{attrs}{type}" for @$results;
 
-Query all information Icinga2 has on a certain service. As services usually
-have more than one instance, the result is a reference to a list of hashes,
-each describing one instance.
+Query all information Icinga2 has on a number of services. As services usually
+have more than one instance, the result is always a reference to a list of hashes,
+each describing one instance, even when querying a single service.
 
-The only mandatory argument is C<service>. Note that this is a singular as it
-specifies a single service name while the method name is plural due to the
-plurality of returned results.
+The only mandatory argument is C<service> I<or> C<services>.
 
 =method send_custom_notification
 
