@@ -337,13 +337,24 @@ sub request {
     my $content = '{"results":[]}';
     if( $req->uri =~ m!/status/IcingaApplication$! ) {
         $content = '{"results":[{"status":{"icingaapplication":{"app":[]}}}]}'
+    } elsif( _incallers(qr/query_parent_hosts/) ) {
     }
-
     return HTTP::Response->new( 200, 'OK', undef, $content );
 }
 
 sub calls {
     return shift->{calls};
+}
+
+sub _incallers {
+    my $re = shift;
+    my $f=1;
+    my caller;
+    do {
+        $caller = (caller( $f ))[3];
+        print STDERR ">>$caller\n";
+    } while($caller);
+    return;
 }
 
 sub _logcall {
