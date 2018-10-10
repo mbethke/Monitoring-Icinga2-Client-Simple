@@ -519,7 +519,7 @@ The only mandatory argument is C<host>.
 
 Query all information Icinga2 has on a number of hosts. The result is a
 reference to a list of hashes, each of which currently contains a single key
-C<attrs>. 
+C<attrs>.
 
 The only mandatory argument is C<hosts>, which may also specify a single
 scalar, so this method is preferable for consistency over L</query_host>.
