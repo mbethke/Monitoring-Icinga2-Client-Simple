@@ -6,7 +6,7 @@ Monitoring::Icinga2::Client::Simple - Simpler REST client for Icinga2
 
 # VERSION
 
-version 0.002000\_01
+version 0.002000
 
 # SYNOPSIS
 
@@ -127,9 +127,9 @@ argument to also delete all of this host's service downtimes.
     $result = $ia->query_host( host => 'web-1' );
     say "$result->{attrs}{name}: $result->{attrs}{type}";
 
-Equivalent to ["query\_hosts"](#query_hosts) except that it accepts only a single host name
-and the result is a reference to a single hash, or `undef` if the host
-can't be found.
+Provided for backwards compatibility only. Equivalent to ["query\_hosts"](#query_hosts) except
+that it accepts only a single host name and the result is a reference to a
+single hash, or `undef` if the host can't be found.
 
 The only mandatory argument is `host`.
 
@@ -139,11 +139,11 @@ The only mandatory argument is `host`.
     say "$_->{attrs}{name}: $_->{attrs}{type}" for @$results;
 
 Query all information Icinga2 has on a number of hosts. The result is a
-reference to a list of hashes, each of which currently contains a single key
-`attrs`.
+reference to a list of hashes, each of which, as per the current API version,
+contains a single key named `attrs`.
 
 The only mandatory argument is `hosts`, which may also specify a single
-scalar, so this method is preferable for consistency over ["query\_host"](#query_host).
+scalar, so this method is preferable over ["query\_host"](#query_host).
 
 ## query\_child\_hosts
 
