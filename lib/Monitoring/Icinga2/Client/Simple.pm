@@ -1,7 +1,7 @@
 # ABSTRACT: Simpler REST client for Icinga2
 
 package Monitoring::Icinga2::Client::Simple;
-$Monitoring::Icinga2::Client::Simple::VERSION = 'v0.1.0';
+$Monitoring::Icinga2::Client::Simple::VERSION = '0.002000';
 use strict;
 use warnings;
 use 5.010_001;
@@ -51,7 +51,7 @@ sub schedule_downtime {
 
 sub _schedule_downtime_type {
     my ($self, $type, $args) = @_;
-    my $req_results = $self->_verbose_request('POST',
+    my $req_results = $self->_request('POST',
         '/actions/schedule-downtime',
         {
             type => $type,
@@ -93,7 +93,7 @@ sub _remove_downtime_type {
     } else {
         @post_args = ( $args, { type => $type } );
     }
-    my $req_results = $self->_verbose_request('POST',
+    my $req_results = $self->_request('POST',
         "/actions/remove-downtime",
         @post_args,
     );
@@ -107,7 +107,7 @@ sub send_custom_notification {
 
     my $obj_type = defined $args{host} ? 'host' : 'service';
 
-    return $self->_verbose_request('POST',
+    return $self->_request('POST',
         '/actions/send-custom-notification',
         {
             type => ucfirst $obj_type,
@@ -126,7 +126,7 @@ sub set_notifications {
     _checkargs_any(\%args, qw/ host service /);
     my $uri_object = $args{service} ? 'services' : 'hosts';
 
-    return $self->_verbose_request('POST',
+    return $self->_request('POST',
         "/objects/$uri_object",
         {
             attrs => { enable_notifications => !!$args{state} },
@@ -138,7 +138,7 @@ sub set_notifications {
 sub query_app_attrs {
     my ($self) = @_;
 
-    my $r = $self->_verbose_request('GET',
+    my $r = $self->_request('GET',
         "/status/IcingaApplication",
     );
     # uncoverable branch true
@@ -162,14 +162,14 @@ sub query_app_attrs {
     sub set_app_attrs {
         my ($self, %args) = @_;
         _checkargs_any(\%args, keys %legal_attrs);
-        my @unknown_attrs = grep { not exists $legal_attrs{$_} } sort keys %args;
+        my @unknown_attrs = grep { not exists $legal_attrs{$_} } keys %args;
         @unknown_attrs and croak(
             sprintf "Unknown attributes: %s; legal attributes are: %s",
-            join(",", @unknown_attrs),
+            join(",", sort @unknown_attrs),
             join(",", sort keys %legal_attrs),
         );
 
-        return $self->_verbose_request('POST',
+        return $self->_request('POST',
             '/objects/icingaapplications/app',
             {
                 attrs => {
@@ -185,34 +185,47 @@ sub set_global_notifications {
     $self->set_app_attrs( notifications => $state );
 }
 
-sub query_host {
+sub query_hosts {
     my ($self, %args) = @_;
     _checkargs(\%args, qw/ host /);
-    return $self->_verbose_request('GET',
+    my $result = $self->_request('GET',
         '/objects/hosts',
-        { filter => "host.name==\"$args{host}\"" }
-    )->[0];
+        { filter => _create_filter( \%args ) },
+    );
+}
+
+sub query_host {
+    my $self = shift;
+    return $self->query_hosts( @_ )->[0];
 }
 
 sub query_child_hosts {
     my ($self, %args) = @_;
     _checkargs(\%args, qw/ host /);
-    return $self->_verbose_request('GET',
+    return $self->_request('GET',
         '/objects/hosts',
         { filter => "\"$args{host}\" in host.vars.parents" }
     );
 }
 
+sub query_parent_hosts {
+    my ($self, %args) = @_;
+    my $expand = delete $args{expand};
+    my $names = $self->query_host( %args )->{attrs}{vars}{parents} // [];
+    return $names unless $expand;
+    return $self->query_hosts( host => $names );
+}
+
 sub query_services {
     my ($self, %args) = @_;
     _checkargs(\%args, qw/ service /);
-    return $self->_verbose_request('GET',
+    return $self->_request('GET',
         '/objects/services',
-        { filter => "service.name==\"$args{service}\"" }
+        { filter => _filter_expr( "service.name", $args{service} ) },
     );
 }
 
-sub _verbose_request {
+sub _request {
     my ($self, $method, $url, $getargs, $postdata) = @_;
 
     if(defined $getargs and ref $getargs) {
@@ -220,12 +233,9 @@ sub _verbose_request {
         $postdata = $getargs;
         undef $getargs;
     }
-    _debug("Query URL: $url", $getargs ? "Query args: $getargs" : ());
-    _debug_dump($postdata);
     # uncoverable branch true
     my $r = $self->do_request($method, $url, $getargs, $postdata)
         or die $self->request_status_line . "\n";
-    _debug_dump($r);
     return $r->{results};
 }
 
@@ -256,21 +266,20 @@ sub _checkargs_any {
 # Not a method!
 sub _create_filter {
     my $args = shift;
-    croak( "`host' argument missing" ) unless defined $args->{host};
-    my $filter = "host.name==\"$args->{host}\"";
-    $filter .= " && service.name==\"$args->{service}\"" if $args->{service};
-    return $filter;
+    defined $args->{host} or croak(
+        sprintf( "missing or undefined argument `host' to %s()", (caller(1))[3] )
+    );
+    my $filter = _filter_expr( "host.name", $args->{host} );
+    return $filter unless $args->{service};
+    return "$filter && " . _filter_expr( "service.name", $args->{service} );
 }
 
-sub _debug {
-    print STDERR @_ if DEBUG;
-}
-
-sub _debug_dump {
-    if(DEBUG) {
-        require YAML::XS;
-        print YAML::XS::Dump(\@_);
-    }
+# Return an == or `in' expression depending on the type of argument.
+# Only scalars and arrayrefs make sense!
+sub _filter_expr {
+    my ($what, $arg) = @_;
+    return "$what==\"$arg\"" unless ref $arg;
+    return "$what in [" . join( ',', map { "\"$_\"" } @$arg ) . ']';
 }
 
 1;
@@ -287,7 +296,7 @@ Monitoring::Icinga2::Client::Simple - Simpler REST client for Icinga2
 
 =head1 VERSION
 
-version v0.1.0
+version 0.002000
 
 =head1 SYNOPSIS
 
@@ -492,7 +501,7 @@ argument to also delete all of this host's service downtimes.
 
 =head2 query_host
 
-    $result = $ia->query_host( host => 'web-1' );
+    ($result) = $ia->query_host( host => 'web-1' );
     say "$result->{attrs}{name}: $result->{attrs}{type}";
 
 Query all information Icinga2 has on a certain host. The result is a hashref,
@@ -508,6 +517,17 @@ The only mandatory argument is C<host>.
 
 Query all host objects that have a certain host listed as a parent. The result
 is a reference to a list of hashes like those returned by L</query_host>.
+
+The only mandatory argument is C<host>.
+
+=head2 query_parent_hosts
+
+    $results = $ia->query_parent_hosts( host => 'web-1', expand => 1 );
+    say for @$results;
+
+Query all parent host names of a given host. If C<expand> is C<false> or
+missing, the result is a reference to a list of names. Otherwise it is a list
+of hashes like those returned by L</query_host>.
 
 The only mandatory argument is C<host>.
 
