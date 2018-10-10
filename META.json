@@ -50,7 +50,7 @@
          }
       }
    },
-   "release_status" : "testing",
+   "release_status" : "stable",
    "resources" : {
       "homepage" : "https://github.com/mbethke/Monitoring-Icinga2-Client-Simple",
       "repository" : {
@@ -59,7 +59,7 @@
          "web" : "https://github.com/mbethke/Monitoring-Icinga2-Client-Simple"
       }
    },
-   "version" : "0.002000_01",
+   "version" : "0.002000",
    "x_serialization_backend" : "Cpanel::JSON::XS version 4.06"
 }
 
