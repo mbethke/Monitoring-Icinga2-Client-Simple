@@ -349,7 +349,7 @@ sub calls {
 sub _incallers {
     my $re = shift;
     my $f=1;
-    my caller;
+    my $caller;
     do {
         $caller = (caller( $f ))[3];
         print STDERR ">>$caller\n";
