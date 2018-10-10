@@ -11,5 +11,4 @@ t/001_load.t
 t/MIC-Simple.t
 t/author-pod-coverage.t
 t/pod.t
-trace
 weaver.ini
