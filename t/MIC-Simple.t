@@ -178,7 +178,7 @@ req_ok(
 req_fail(
     'set_notifications',
     [ state => 1, service => 'myservice' ],
-    qr/`host' argument missing/,
+    qr/^missing or undefined argument `host' to Monitoring::Icinga2::Client::Simple::set_notifications()/,
     "catches missing host argument"
 );
 
