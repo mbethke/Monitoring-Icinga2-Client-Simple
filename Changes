@@ -1,4 +1,6 @@
 0.002000 Wed Oct 10 15:15:19 2018 +0700
+ - Enhancement: add query_hosts method
+ - Enhancement: add query_parent_hosts method
 
 0.001000 Sat Oct 6 10:56:10 2018 +0700
- - Initial release
+ - Initial release:w
