@@ -237,6 +237,13 @@ req_ok(
 );
 
 req_ok(
+    'query_parent_hosts',
+    [ host => 'localhost', expand => 1 ],
+    [ $uri_hosts => '{"filter":"host.name==\"localhost\""}' ],
+    "query parent hosts with expansion"
+);
+
+req_ok(
     'query_services',
     [ service => 'myservice' ],
     [ $uri_services => '{"filter":"service.name==\"myservice\""}' ],
