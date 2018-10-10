@@ -187,10 +187,10 @@ sub set_global_notifications {
 
 sub query_hosts {
     my ($self, %args) = @_;
-    _checkargs(\%args, qw/ host /);
+    _checkargs(\%args, qw/ hosts /);
     my $result = $self->_request('GET',
         '/objects/hosts',
-        { filter => _create_filter( \%args ) },
+        { filter => _filter_expr( "host.name", $args{hosts} ) } },
     );
 }
 
@@ -218,10 +218,11 @@ sub query_parent_hosts {
 
 sub query_services {
     my ($self, %args) = @_;
-    _checkargs(\%args, qw/ service /);
+    _checkargs_any(\%args, qw/ service services /);
+    my $srv = $args{service} // $args{services};
     return $self->_request('GET',
         '/objects/services',
-        { filter => _filter_expr( "service.name", $args{service} ) },
+        { filter => _filter_expr( "service.name", $srv ) },
     );
 }
 
@@ -501,14 +502,26 @@ argument to also delete all of this host's service downtimes.
 
 =head2 query_host
 
-    ($result) = $ia->query_host( host => 'web-1' );
+    $result = $ia->query_host( host => 'web-1' );
     say "$result->{attrs}{name}: $result->{attrs}{type}";
 
-Query all information Icinga2 has on a certain host. The result is a hashref,
-currently containing a single key C<attrs>. If the host is not found, C<undef>
-is returned.
+Equivalent to L</query_hosts> except that it accepts only a single host name
+and the result is a reference to a single hash, or C<undef> if the host
+can't be found.
 
 The only mandatory argument is C<host>.
+
+=head2 query_hosts
+
+    $results = $ia->query_host( hosts => [ qw( web-1 hypervisor-1 ) ] );
+    say "$_->{attrs}{name}: $_->{attrs}{type}" for @$results;
+
+Query all information Icinga2 has on a number of hosts. The result is a
+reference to a list of hashes, each of which currently contains a single key
+C<attrs>. 
+
+The only mandatory argument is C<hosts>, which may also specify a single
+scalar, so this method is preferable for consistency over L</query_host>.
 
 =head2 query_child_hosts
 
@@ -534,15 +547,14 @@ The only mandatory argument is C<host>.
 =head2 query_services
 
     $result = $ia->query_services( service => 'HTTP' );
+    $result = $ia->query_services( services => [ qw( HTTP SMTP ) ] );
     say "$_->{attrs}{name}: $_->{attrs}{type}" for @$results;
 
-Query all information Icinga2 has on a certain service. As services usually
-have more than one instance, the result is a reference to a list of hashes,
-each describing one instance.
+Query all information Icinga2 has on a number of services. As services usually
+have more than one instance, the result is always a reference to a list of hashes,
+each describing one instance, even when querying a single service.
 
-The only mandatory argument is C<service>. Note that this is a singular as it
-specifies a single service name while the method name is plural due to the
-plurality of returned results.
+The only mandatory argument is C<service> I<or> C<services>.
 
 =head2 send_custom_notification
 
