@@ -6,7 +6,7 @@ Monitoring::Icinga2::Client::Simple - Simpler REST client for Icinga2
 
 # VERSION
 
-version 0.001000
+version 0.002000\_01
 
 # SYNOPSIS
 
@@ -127,11 +127,23 @@ argument to also delete all of this host's service downtimes.
     $result = $ia->query_host( host => 'web-1' );
     say "$result->{attrs}{name}: $result->{attrs}{type}";
 
-Query all information Icinga2 has on a certain host. The result is a hashref,
-currently containing a single key `attrs`. If the host is not found, `undef`
-is returned.
+Equivalent to ["query\_hosts"](#query_hosts) except that it accepts only a single host name
+and the result is a reference to a single hash, or `undef` if the host
+can't be found.
 
 The only mandatory argument is `host`.
+
+## query\_hosts
+
+    $results = $ia->query_host( hosts => [ qw( web-1 hypervisor-1 ) ] );
+    say "$_->{attrs}{name}: $_->{attrs}{type}" for @$results;
+
+Query all information Icinga2 has on a number of hosts. The result is a
+reference to a list of hashes, each of which currently contains a single key
+`attrs`.
+
+The only mandatory argument is `hosts`, which may also specify a single
+scalar, so this method is preferable for consistency over ["query\_host"](#query_host).
 
 ## query\_child\_hosts
 
@@ -143,18 +155,28 @@ is a reference to a list of hashes like those returned by ["query\_host"](#query
 
 The only mandatory argument is `host`.
 
+## query\_parent\_hosts
+
+    $results = $ia->query_parent_hosts( host => 'web-1', expand => 1 );
+    say for @$results;
+
+Query all parent host names of a given host. If `expand` is `false` or
+missing, the result is a reference to a list of names. Otherwise it is a
+reference to a list of hashes like those returned by ["query\_host"](#query_host).
+
+The only mandatory argument is `host`.
+
 ## query\_services
 
     $result = $ia->query_services( service => 'HTTP' );
+    $result = $ia->query_services( services => [ qw( HTTP SMTP ) ] );
     say "$_->{attrs}{name}: $_->{attrs}{type}" for @$results;
 
-Query all information Icinga2 has on a certain service. As services usually
-have more than one instance, the result is a reference to a list of hashes,
-each describing one instance.
+Query all information Icinga2 has on a number of services. As services usually
+have more than one instance, the result is always a reference to a list of hashes,
+each describing one instance, even when querying a single service.
 
-The only mandatory argument is `service`. Note that this is a singular as it
-specifies a single service name while the method name is plural due to the
-plurality of returned results.
+The only mandatory argument is `service` _or_ `services`.
 
 ## send\_custom\_notification
 
