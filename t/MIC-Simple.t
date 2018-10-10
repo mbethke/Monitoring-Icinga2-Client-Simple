@@ -338,6 +338,7 @@ sub request {
     if( $req->uri =~ m!/status/IcingaApplication$! ) {
         $content = '{"results":[{"status":{"icingaapplication":{"app":[]}}}]}'
     } elsif( _incallers(qr/query_parent_hosts/) ) {
+        $content = '{"results":[{"attrs":{"vars":{"parents":["parent1","parent2"]}}}]}'
     }
     return HTTP::Response->new( 200, 'OK', undef, $content );
 }
@@ -352,7 +353,7 @@ sub _incallers {
     my $caller;
     do {
         $caller = (caller( $f++ ))[3];
-        print STDERR ">>$caller\n";
+        return 1 if $caller =~ $re;
     } while($caller);
     return;
 }
