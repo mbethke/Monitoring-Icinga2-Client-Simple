@@ -212,7 +212,9 @@ sub query_child_hosts {
 sub query_parent_hosts {
     my ($self, %args) = @_;
     my $expand = delete $args{expand};
+    # uncoverable condition right
     my $names = ( $self->query_host( %args ) // {} )->{attrs}{vars}{parents} // [];
+    # uncoverable condition right
     return $names unless $expand and @$names;
     return $self->query_hosts( hosts => $names );
 }

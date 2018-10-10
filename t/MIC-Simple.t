@@ -250,7 +250,14 @@ req_ok(
     'query_services',
     [ service => 'myservice' ],
     [ $uri_services => '{"filter":"service.name==\"myservice\""}' ],
-    "query services"
+    "query service"
+);
+
+req_ok(
+    'query_services',
+    [ services => [ qw/ myservice otherservice / ] ],
+    [ $uri_services => '{"filter":"service.name in [\"myservice\",\"otherservice\"]"}' ],
+    "query services (synonymous arg)"
 );
 
 done_testing;
