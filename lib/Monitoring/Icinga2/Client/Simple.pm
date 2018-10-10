@@ -540,8 +540,8 @@ The only mandatory argument is C<host>.
     say for @$results;
 
 Query all parent host names of a given host. If C<expand> is C<false> or
-missing, the result is a reference to a list of names. Otherwise it is a list
-of hashes like those returned by L</query_host>.
+missing, the result is a reference to a list of names. Otherwise it is a
+reference to a list of hashes like those returned by L</query_host>.
 
 The only mandatory argument is C<host>.
 
