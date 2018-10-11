@@ -6,7 +6,7 @@ Monitoring::Icinga2::Client::Simple - Simpler REST client for Icinga2
 
 # VERSION
 
-version 0.002000
+version 0.002001
 
 # SYNOPSIS
 

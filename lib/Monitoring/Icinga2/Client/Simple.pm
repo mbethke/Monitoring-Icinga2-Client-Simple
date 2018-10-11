@@ -26,10 +26,10 @@ sub new {
         defined $self->{ua} or croak( 'Monitoring::Icinga2::Client::REST seems to have changed internals; '. 'passing `useragent\' does not work. Please notify mbethke@cpan.org');
         $ua->default_header( 'Accept' => 'application/json' );
         $self->{ua} = $ua;
-        # uncoverable condition false
-        # uncoverable branch right
-        $self->{_mics_author} = getlogin || getpwuid($<);
     }
+    # uncoverable condition false
+    # uncoverable branch right
+    $self->{_mics_author} = getlogin || getpwuid($<);
     return $self;
 }
 

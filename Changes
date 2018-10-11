@@ -1,4 +1,12 @@
 ---
+version: 0.002001
+date:    Thu Oct 11 11:19:38 2018 +0700
+changes:
+- 'Bugfix: schedule_downtime() wouldn''t automatically add an `author'' field
+  unless a custom useragent was used'
+
+
+---
 version: 0.002000
 date:    Wed Oct 10 15:15:19 2018 +0700
 changes:
