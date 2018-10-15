@@ -306,7 +306,7 @@ __END__
     # Schedule an hour of downtime for web-1 and all of its services
     $ia->schedule_downtime(
         host => 'web-1',
-        services => 1;
+        services => 1,
         start_time => scalar(time),
         end_time => time + 3600,
         fixed => 1,
@@ -326,7 +326,7 @@ higher-level interface for commonly used operations such as:
 * Scheduling and removing downtimes on hosts and services
 * Enabling and disabling notifications for individual objects
 * Setting and getting global flags like those found under "Monitoring Health" -- notifications, active checks etc.
-* Finding child objects
+* Finding related objects and retrieving attributes
 
 L<Monitoring::Icinga2::Client::REST> can do all of this and more, but it
 requires you to deal with Icinga's query language that's as complicated as it
@@ -336,7 +336,7 @@ still allowing to make more specialized API calls yourself.
 =method new
 
     $ia = Monitoring::Icinga2::Client::Simple->new( agent => $ua );
-    $ia = Monitoring::Icinga2::Client::Simple->new( hostname => 'monitoring.mycompany.org' );
+    $ia = Monitoring::Icinga2::Client::Simple->new( server => 'monitoring.mycompany.org' );
 
 The constructor supports almost the same arguments as the one in
 L<Monitoring::Icinga2::Client::REST>. The differences are:
